@@ -1,8 +1,12 @@
 from django.shortcuts import render
-
-# Create your views here.
-
-
+from rest_framework import generics
 
 def test(request):
     pass
+
+class CommentListCreatView(generics.ListAPIView):
+    def get(self,request):
+        pass
+
+    def post(self,request):
+        pass
