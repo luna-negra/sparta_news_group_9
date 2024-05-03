@@ -26,6 +26,14 @@ class ArticleListView(APIView):
 
 
 class ArticleDetailView(APIView):
+    def get_object(self, pk):
+        try:
+            return Articles.objects.get(pk=pk)
+        except Articles.DoesNotExist:
+            return Response({"error": "Article not found"}, status=status.HTTP_404_NOT_FOUND)
+
     # 게시글 조회(detail)
     def get(self, request, pk):
-        pass
+        get_obj = self.get_object(pk)
+        serializer = ArticleSerializer(get_obj)
+        return Response(serializer.data)
