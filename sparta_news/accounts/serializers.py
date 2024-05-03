@@ -1,7 +1,7 @@
 import re
 from django.contrib.auth import (get_user_model,
                                  authenticate,
-                                 login)
+                                 logout)
 from rest_framework.serializers import (ModelSerializer,
                                         ValidationError,)
 from .models import datetime, DATETIME_FORMAT

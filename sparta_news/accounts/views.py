@@ -4,6 +4,8 @@ from rest_framework.views import APIView
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework_simplejwt.views import TokenObtainPairView
+from rest_framework_simplejwt.serializers import TokenBlacklistSerializer
+from rest_framework_simplejwt.exceptions import TokenError
 from .serializers import *
 
 # Create your views here.
@@ -54,14 +56,45 @@ class AccountSignInView(TokenObtainPairView):
 #회원 로그아웃
 @api_view(["POST"])
 def signout(request):
-    return Response(data={"title": "회원로그아웃"})
 
+    token = request.auth
+    status_code = HTTP_403_FORBIDDEN
+    result = {
+        "result": False,
+        "msg": "사용자 정보가 유효하지 않습니다.",
+    }
 
+    if token is not None:
+
+        r_token = request.user.r_token
+        request.data["refresh"] = r_token
+        serializer = TokenBlacklistSerializer(data=request.data)
+
+        try:
+            serializer.is_valid()
+            result["result"] = True
+            result.pop("msg")
+
+        except TokenError:
+            result["msg"] = "이미 로그아웃 된 계정입니다."
+            status_code = HTTP_400_BAD_REQUEST
+
+    return Response(data=result,
+                    status=status_code)
 
 class AccountsDetailView(APIView):
 
     # 회원 정보 조회
     def get(self, request, account_id: int):
+
+        # 입력 토큰 확인
+        token = request.auth
+
+
+
+
+
+
         return Response(data={"title": "회원정보조회"})
 
 
