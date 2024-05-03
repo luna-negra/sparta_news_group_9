@@ -61,3 +61,11 @@ class CommentDetailView(generics.ListAPIView):
         return Response({"error":"권한 없는 사용자입니다."},status=status.HTTP_403_FORBIDDEN)
 
 
+    def delete(self,request,comment_id):
+        user = get_object_or_404(Accounts, pk=1)
+        comment = get_object_or_404(Comments, pk=comment_id)
+        #if request.user == comment.user:
+        if user == comment.user:
+            comment.delete()
+            return Response({"message":"댓글이 삭제 되었습니다."},status=status.HTTP_204_NO_CONTENT)
+        return Response({"error":"권한 없는 사용자입니다."},status=status.HTTP_403_FORBIDDEN)
