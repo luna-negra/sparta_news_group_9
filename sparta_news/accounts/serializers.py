@@ -2,8 +2,11 @@ import re
 from django.contrib.auth import (get_user_model,
                                  authenticate,
                                  logout)
+from django.contrib.auth import authenticate
+from django.contrib.auth.hashers import make_password
 from rest_framework.serializers import (ModelSerializer,
-                                        ValidationError,)
+                                        ValidationError,
+                                        CharField)
 from .models import datetime, DATETIME_FORMAT
 
 
@@ -29,7 +32,7 @@ class AccountSerializers(ModelSerializer):
                 "non_lower": "하나 이상의 소문자가 포함되어야 합니다.",
                 "non_number": "하나 이상의 숫자가 포함되어야 합니다.",
                 "non_special": "하나 이상의 특수문자가 포함되어야 합니다.",
-                "same_password": "이전과 동일한 비밀번호를 사용할 수 없습니다."
+                "same_password": "변경하려는 비밀번호는 이전 비밀번호와 다르게 지정해야 합니다."
             }
         }
 
@@ -77,7 +80,7 @@ class AccountSerializers(ModelSerializer):
 
         if not is_modify:
             new_user = self.Meta.model(**self.data)
-            new_user.set_password(self.data.get("password"))
+            new_user.password = make_password(self.data.get("password"))
             new_user.save()
 
             result = self.data.copy()
@@ -86,14 +89,14 @@ class AccountSerializers(ModelSerializer):
             result["last_login"] = new_user.last_login.strftime(DATETIME_FORMAT)
             return result
 
+        # 변경인 경우
+        field_change_allow = ["email", "introduction"]
         edit_user = self.instance
+
         for field_name in self.initial_data:
             setattr(edit_user, field_name, self.initial_data.get(field_name))
 
         edit_user.save()
-
-
-
 
     def get_data(self):
         result = self.data.copy()
@@ -111,7 +114,36 @@ class AccountsModifySerializers(AccountSerializers):
         ]
 
 
+class AccountsPasswordChangeSerializer(AccountSerializers):
 
+    pre_password = CharField(max_length=25,
+                             required=True)
+
+    class Meta:
+        model = get_user_model()
+        fields=[
+            "pre_password",
+            "password"
+        ]
+        error_messages = AccountSerializers.Meta.error_messages
+
+    def validate_password(self, n_pw):
+        p_pw = self.initial_data.get("pre_password")
+
+        if p_pw == n_pw:
+            raise ValidationError(self.Meta.error_messages.get("password").get("same_password"))
+
+        return super().validate_password(password=n_pw)
+
+    def save(self, request) -> bool:
+        user = self.instance
+        new_password = self.initial_data.get("password")
+        user.password = make_password(password=new_password)
+        user.save()
+
+        return True if just_authenticate(request=request,
+                                         username=user.username,
+                                         password=new_password) else False
 
 
 def update_last_login(username, r_token) -> None:
@@ -122,3 +154,7 @@ def update_last_login(username, r_token) -> None:
     login_user.r_token = r_token
     login_user.save()
     return None
+
+
+def just_authenticate(request, username, password) -> bool:
+    return authenticate(request=request, username=username, password=password)

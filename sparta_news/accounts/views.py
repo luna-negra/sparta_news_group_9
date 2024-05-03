@@ -59,7 +59,7 @@ class AccountSignInView(TokenObtainPairView):
                         status=HTTP_200_OK)
 
 
-#회원 로그아웃
+# 회원 로그아웃
 @api_view(["POST"])
 def signout(request):
 
@@ -123,7 +123,7 @@ class AccountsDetailView(APIView):
 
         result = {
             "result": False,
-            "msg": "다른 계정의 변경을 시도했습니다."
+            "msg": "다른 계정의 정보 변경을 시도했습니다."
         }
         status_code = HTTP_401_UNAUTHORIZED
 
@@ -142,15 +142,39 @@ class AccountsDetailView(APIView):
             result.pop("msg")
             status_code = HTTP_200_OK
 
-
         return Response(data=result,
                         status=status_code)
 
-
     # 회원 비밀번호 변경
     def patch(self, request, account_id: int):
-        return Response(data={"title": "비밀번호 변경"})
 
+        result = {
+            "result": False,
+            "msg": "다른 계정의 비밀번호 변경을 시도했습니다."
+        }
+        status_code = HTTP_401_UNAUTHORIZED
+
+        if request.user.id == account_id:
+
+            serializer = AccountsPasswordChangeSerializer(data=request.data,
+                                                          instance=ACCOUNTS_MNG.get(id=account_id),
+                                                          many=False)
+
+            serializer.is_valid(raise_exception=True)
+            user = just_authenticate(request=request,
+                                     username=request.user.username,
+                                     password=request.data.get("pre_password"))
+
+            if user is not None and serializer.save(request=request):
+                result["result"] = True
+                result.pop("msg")
+                status_code = HTTP_204_NO_CONTENT
+
+            else:
+                result["msg"] = "비밀번호가 일치하지 않습니다."
+
+        return Response(data=result,
+                        status=status_code)
 
     # 회원 탈퇴
     def delete(self, request, account_id: int):
