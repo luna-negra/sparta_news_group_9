@@ -11,6 +11,7 @@ class AccountSerializers(ModelSerializer):
     class Meta:
         model = get_user_model()
         fields = [
+            "id",
             "username",
             "password",
             "email",
@@ -81,6 +82,11 @@ class AccountSerializers(ModelSerializer):
         result.pop("password")
         result["created"] = new_user.created.strftime(DATETIME_FORMAT)
         result["last_login"] = new_user.last_login.strftime(DATETIME_FORMAT)
+        return result
+
+    def get_data(self):
+        result = self.data.copy()
+        result.pop("password")
         return result
 
 

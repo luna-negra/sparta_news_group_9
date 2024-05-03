@@ -1,14 +1,20 @@
-from django.shortcuts import render
+from django.shortcuts import render, get_object_or_404
 from rest_framework.status import *
 from rest_framework.views import APIView
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
+from rest_framework.permissions import IsAuthenticated
 from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework_simplejwt.serializers import TokenBlacklistSerializer
 from rest_framework_simplejwt.exceptions import TokenError
 from .serializers import *
 
 # Create your views here.
+
+
+# CONSTANT VARIABLES
+ACCOUNTS_MODEL = AccountSerializers.Meta.model
+ACCOUNTS_MNG = ACCOUNTS_MODEL.objects
 
 
 # 회원 가입
@@ -58,7 +64,7 @@ class AccountSignInView(TokenObtainPairView):
 def signout(request):
 
     token = request.auth
-    status_code = HTTP_403_FORBIDDEN
+    status_code = HTTP_401_UNAUTHORIZED
     result = {
         "result": False,
         "msg": "사용자 정보가 유효하지 않습니다.",
@@ -82,20 +88,35 @@ def signout(request):
     return Response(data=result,
                     status=status_code)
 
+
 class AccountsDetailView(APIView):
+
+    permission_classes = [IsAuthenticated]
 
     # 회원 정보 조회
     def get(self, request, account_id: int):
 
-        # 입력 토큰 확인
-        token = request.auth
+        result = {
+            "result": False,
+            "msg": "계정이 존재하지 않습니다."
+        }
+        status_code = HTTP_400_BAD_REQUEST
 
+        try:
+            user = ACCOUNTS_MNG.get(id=account_id)
 
+        except ACCOUNTS_MODEL.DoesNotExist:
+            pass
 
+        else:
+            serializer = AccountSerializers(instance=user, many=False)
+            result["result"] = True
+            result["user"] = serializer.get_data()
+            result.pop("msg")
+            status_code = HTTP_200_OK
 
-
-
-        return Response(data={"title": "회원정보조회"})
+        return Response(data=result,
+                        status=status_code)
 
 
     # 회원 정보 수정
