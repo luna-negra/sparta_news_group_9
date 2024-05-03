@@ -73,21 +73,45 @@ class AccountSerializers(ModelSerializer):
 
         return password
 
-    def save(self):
-        new_user = self.Meta.model(**self.data)
-        new_user.set_password(self.data.get("password"))
-        new_user.save()
+    def save(self, is_modify=False):
 
-        result = self.data.copy()
-        result.pop("password")
-        result["created"] = new_user.created.strftime(DATETIME_FORMAT)
-        result["last_login"] = new_user.last_login.strftime(DATETIME_FORMAT)
-        return result
+        if not is_modify:
+            new_user = self.Meta.model(**self.data)
+            new_user.set_password(self.data.get("password"))
+            new_user.save()
+
+            result = self.data.copy()
+            result.pop("password")
+            result["created"] = new_user.created.strftime(DATETIME_FORMAT)
+            result["last_login"] = new_user.last_login.strftime(DATETIME_FORMAT)
+            return result
+
+        edit_user = self.instance
+        for field_name in self.initial_data:
+            setattr(edit_user, field_name, self.initial_data.get(field_name))
+
+        edit_user.save()
+
+
+
 
     def get_data(self):
         result = self.data.copy()
         result.pop("password")
         return result
+
+
+class AccountsModifySerializers(AccountSerializers):
+
+    class Meta:
+        model = get_user_model()
+        fields = [
+            "email",
+            "introduction"
+        ]
+
+
+
 
 
 def update_last_login(username, r_token) -> None:

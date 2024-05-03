@@ -118,10 +118,33 @@ class AccountsDetailView(APIView):
         return Response(data=result,
                         status=status_code)
 
-
-    # 회원 정보 수정
+    # 회원 정보 변경
     def put(self, request, account_id: int):
-        return Response(data={"title": "회원정보수정"})
+
+        result = {
+            "result": False,
+            "msg": "다른 계정의 변경을 시도했습니다."
+        }
+        status_code = HTTP_401_UNAUTHORIZED
+
+        if request.user.id == account_id:
+
+            serializer = AccountsModifySerializers(data=request.data,
+                                                   instance=ACCOUNTS_MNG.get(id=account_id),
+                                                   many=False,
+                                                   partial=True)
+
+            serializer.is_valid(raise_exception=True)
+            serializer.save(is_modify=True)
+            result["result"] = True
+            result["user"] = AccountSerializers(instance=ACCOUNTS_MNG.get(id=account_id),
+                                                many=False).get_data()
+            result.pop("msg")
+            status_code = HTTP_200_OK
+
+
+        return Response(data=result,
+                        status=status_code)
 
 
     # 회원 비밀번호 변경
