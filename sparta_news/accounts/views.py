@@ -178,5 +178,30 @@ class AccountsDetailView(APIView):
 
     # 회원 탈퇴
     def delete(self, request, account_id: int):
-        return Response(data={"title": "회원탈퇴"})
+
+        result = {
+            "result": False,
+            "msg": "다른 계정의 탈퇴를 시도하였습니다."
+        }
+        status_code = HTTP_401_UNAUTHORIZED
+
+        if request.user.id == account_id:
+
+            user = ACCOUNTS_MNG.get(id=account_id)
+            input_pw = request.data.get("password")
+
+            if just_authenticate(request=request,
+                                 username=user.username,
+                                 password=input_pw):
+
+                user.delete()
+                result["result"] = True
+                result.pop("msg")
+                status_code = HTTP_204_NO_CONTENT
+
+            else:
+                result["msg"] = "계정 정보가 일치하지 않습니다."
+
+        return Response(data=result,
+                        status=status_code)
 
