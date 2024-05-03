@@ -1,4 +1,3 @@
-from django.shortcuts import render, get_object_or_404
 from rest_framework.status import *
 from rest_framework.views import APIView
 from rest_framework.decorators import api_view
@@ -135,7 +134,8 @@ class AccountsDetailView(APIView):
                                                    partial=True)
 
             serializer.is_valid(raise_exception=True)
-            serializer.save(is_modify=True)
+            serializer.save()
+
             result["result"] = True
             result["user"] = AccountSerializers(instance=ACCOUNTS_MNG.get(id=account_id),
                                                 many=False).get_data()

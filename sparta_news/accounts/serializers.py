@@ -1,8 +1,6 @@
 import re
 from django.contrib.auth import (get_user_model,
-                                 authenticate,
-                                 logout)
-from django.contrib.auth import authenticate
+                                 authenticate)
 from django.contrib.auth.hashers import make_password
 from rest_framework.serializers import (ModelSerializer,
                                         ValidationError,
@@ -76,27 +74,16 @@ class AccountSerializers(ModelSerializer):
 
         return password
 
-    def save(self, is_modify=False):
+    def save(self,):
+        new_user = self.Meta.model(**self.data)
+        new_user.password = make_password(self.data.get("password"))
+        new_user.save()
 
-        if not is_modify:
-            new_user = self.Meta.model(**self.data)
-            new_user.password = make_password(self.data.get("password"))
-            new_user.save()
-
-            result = self.data.copy()
-            result.pop("password")
-            result["created"] = new_user.created.strftime(DATETIME_FORMAT)
-            result["last_login"] = new_user.last_login.strftime(DATETIME_FORMAT)
-            return result
-
-        # 변경인 경우
-        field_change_allow = ["email", "introduction"]
-        edit_user = self.instance
-
-        for field_name in self.initial_data:
-            setattr(edit_user, field_name, self.initial_data.get(field_name))
-
-        edit_user.save()
+        result = self.data.copy()
+        result.pop("password")
+        result["created"] = new_user.created.strftime(DATETIME_FORMAT)
+        result["last_login"] = new_user.last_login.strftime(DATETIME_FORMAT)
+        return result
 
     def get_data(self):
         result = self.data.copy()
@@ -107,11 +94,20 @@ class AccountSerializers(ModelSerializer):
 class AccountsModifySerializers(AccountSerializers):
 
     class Meta:
-        model = get_user_model()
+        model = AccountSerializers.Meta.model
         fields = [
             "email",
             "introduction"
         ]
+
+    def save(self):
+        edit_user = self.instance
+        for field_name in self.initial_data:
+            if field_name in self.Meta.fields:
+                setattr(edit_user, field_name, self.initial_data.get(field_name))
+
+        edit_user.save()
+        return None
 
 
 class AccountsPasswordChangeSerializer(AccountSerializers):
@@ -120,7 +116,7 @@ class AccountsPasswordChangeSerializer(AccountSerializers):
                              required=True)
 
     class Meta:
-        model = get_user_model()
+        model = AccountSerializers.Meta.model
         fields=[
             "pre_password",
             "password"
