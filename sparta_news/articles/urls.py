@@ -4,5 +4,5 @@ from .views import *
 
 app_name: str = "articles"
 urlpatterns: list = [
-    path("", ),
+    path("", test),
 ]

@@ -11,6 +11,7 @@ class Accounts(AbstractUser):
                               null=False
                               )
     introduction = models.TextField(blank=True)
+    r_token = models.CharField(max_length=300, default="")
     created = models.DateTimeField(auto_now_add=True)
     last_login = models.DateTimeField()
 
