@@ -84,3 +84,11 @@ class AccountSerializers(ModelSerializer):
         return result
 
 
+def update_last_login(username, r_token) -> None:
+
+    user_model = AccountSerializers.Meta.model
+    login_user = user_model.objects.get(username=username)
+    login_user.last_login = datetime.now()
+    login_user.r_token = r_token
+    login_user.save()
+    return None

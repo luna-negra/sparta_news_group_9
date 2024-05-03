@@ -27,12 +27,28 @@ def signup(request):
     return Response(data={"result": True, "user": data})
 
 
-
 # 회원 로그인
 class AccountSignInView(TokenObtainPairView):
 
     def post(self, request, *args, **kwargs):
-        pass
+
+        # 데이터 추출 / 계정 검증 및 token 반환
+        data = super().post(request, *args, **kwargs)
+
+        # refresh 토큰 추출
+        r_token = data.data.get("refresh")
+
+        # 로그인 계정 last_date 및 r_token 업데이트
+        update_last_login(username=request.data.get("username"),
+                          r_token = r_token)
+
+        # 발급된 access_token 반환
+        data = {
+            "result": True,
+            "access_token": data.data.get("access")
+        }
+        return Response(data=data,
+                        status=HTTP_200_OK)
 
 
 #회원 로그아웃
