@@ -22,5 +22,5 @@ from articles import urls as urls_articles
 urlpatterns = [
     path("admin/", admin.site.urls),
     path("api/accounts/", include(urls_accounts)),
-    path("api/articles/", include(urls_articles))
+    path("api/articles/", include(urls_articles)),
 ]
