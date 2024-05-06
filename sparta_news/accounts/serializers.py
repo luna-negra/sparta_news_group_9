@@ -8,7 +8,11 @@ from rest_framework.serializers import (ModelSerializer,
 from .models import datetime, DATETIME_FORMAT
 
 
-class AccountSerializers(ModelSerializer):
+class AccountSerializer(ModelSerializer):
+    
+    """
+    AccountSerializer: 사용자 기본 정보 직렬화 클래슨
+    """
     class Meta:
         model = get_user_model()
         fields = [
@@ -35,6 +39,11 @@ class AccountSerializers(ModelSerializer):
         }
 
     def validate_username(self, username) -> str | None:
+
+        """
+        valiate_username: 사용자가 입력한 username 검증을 위한 seriailizer 매서드
+        """
+
         len_username = len(username)
 
         # Username 최소값 검증
@@ -44,6 +53,10 @@ class AccountSerializers(ModelSerializer):
         return username
 
     def validate_password(self, password):
+
+        """
+        valiate_password: 사용자가 입력한 password 검증을 위한 seriailizer 매서드
+        """
 
         len_password = len(password)
         regex_lower = re.compile(pattern=r"[a-z]")
@@ -75,6 +88,11 @@ class AccountSerializers(ModelSerializer):
         return password
 
     def save(self,):
+        
+        """
+        save: 회원 가입 입력값의 DB 저장 매서드
+        """
+        
         new_user = self.Meta.model(**self.data)
         new_user.password = make_password(self.data.get("password"))
         new_user.save()
@@ -86,21 +104,36 @@ class AccountSerializers(ModelSerializer):
         return result
 
     def get_data(self):
+        
+        """
+        get_data: 회원 정보 중 password를 제외한 데이터의 반환을 위한 매서드
+        """
+        
         result = self.data.copy()
         result.pop("password")
         return result
 
 
-class AccountsModifySerializers(AccountSerializers):
+class AccountsModifySerializer(AccountSerializer):
+    
+    """
+    AccountModifySerializer: 회원 정보 수정 관련 입력값 및 결과 직렬화를 위한 클래스
+                             AccountSerializer 클래스 상속
+    """
 
     class Meta:
-        model = AccountSerializers.Meta.model
+        model = AccountSerializer.Meta.model
         fields = [
             "email",
             "introduction"
         ]
 
     def save(self):
+        
+        """
+        save: 회원 정보 수정 시 데이터 저장을 진행하는 매서드
+        """
+        
         edit_user = self.instance
         for field_name in self.initial_data:
             if field_name in self.Meta.fields:
@@ -110,30 +143,50 @@ class AccountsModifySerializers(AccountSerializers):
         return None
 
 
-class AccountsPasswordChangeSerializer(AccountSerializers):
+class AccountsPasswordChangeSerializer(AccountSerializer):
 
+    """
+    AccountsPasswordChangeSerializer: 계정 비밀번호 변경 관련 입력값 및 결과 직렬화를 위한 클래스
+                                      AccountSerializer 클래스 상속
+    """
+
+    # 계정의 기존 password 입력을 위한 Field 추가
     pre_password = CharField(max_length=25,
                              required=True)
 
     class Meta:
-        model = AccountSerializers.Meta.model
-        fields=[
+        model = AccountSerializer.Meta.model
+        fields = [
             "pre_password",
             "password"
         ]
-        error_messages = AccountSerializers.Meta.error_messages
+        error_messages = AccountSerializer.Meta.error_messages
 
     def validate_password(self, n_pw):
+        
+        """
+        validate_password: 새 비밀번호 입력값(password)에 대한 검증 진행
+        """
+        
+        # 입력한 기존 비밀번호 추출
         p_pw = self.initial_data.get("pre_password")
 
+        # 새 비밀번호 및 기존 비밀번호의 동일 여부 확인
         if p_pw == n_pw:
             raise ValidationError(self.Meta.error_messages.get("password").get("same_password"))
 
         return super().validate_password(password=n_pw)
 
     def save(self, request) -> bool:
+        
+        """
+        save: 회원 비밀번호 변경 시 데이터 저장을 진행하는 매서드
+        """
+        
         user = self.instance
         new_password = self.initial_data.get("password")
+        
+        # Password Encryption 진행
         user.password = make_password(password=new_password)
         user.save()
 
@@ -144,7 +197,15 @@ class AccountsPasswordChangeSerializer(AccountSerializers):
 
 def update_last_login(username, r_token) -> None:
 
-    user_model = AccountSerializers.Meta.model
+    """
+    update_last_login: 로그인 성공 사용자 DB 데이터의 last_login 및 r_token 필드 업데이트
+
+    :param username: 로그인 사용자 계정명
+    :param r_token: 로그인 성공 시 반환받은 refresh_token 값
+    :return: None
+    """
+
+    user_model = AccountSerializer.Meta.model
     login_user = user_model.objects.get(username=username)
     login_user.last_login = datetime.now()
     login_user.r_token = r_token
@@ -152,5 +213,15 @@ def update_last_login(username, r_token) -> None:
     return None
 
 
-def just_authenticate(request, username, password) -> bool:
+def just_authenticate(request, username, password) -> AccountSerializer.Meta.model | None:
+
+    """
+    just_authenticate: 현재 로그인 한 사용자의 계정명 및 비밀번호의 인증 결과 반환 매서드
+    
+    :param request: request 객체 
+    :param username: 로그인 사용자 계정명
+    :param password: 검증을 진행할 사용자 비밀번호(plain text) 입력
+    :return: bool. 검증 성공 시 Account 객체를, 검증 실패 시 None 반환
+    """
+
     return authenticate(request=request, username=username, password=password)

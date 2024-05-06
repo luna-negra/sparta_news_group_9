@@ -7,5 +7,5 @@ urlpatterns: list = [
     path("signin/", AccountSignInView.as_view()),
     path("signup/", signup),
     path("signout/", signout),
-    path("<int:account_id>/", AccountsDetailView.as_view()),
+    path("<int:account_id>/", AccountDetailView.as_view()),
 ]
