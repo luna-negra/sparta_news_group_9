@@ -1,6 +1,8 @@
+from rest_framework.request.ForcedAuthentication import authenticate
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
+from rest_framework_simplejwt.tokens import AccessToken
 from .models import Articles
 from .serializers import ArticlesSerializer
 
@@ -10,6 +12,15 @@ from .serializers import ArticlesSerializer
 class ArticlesDetailAPIView(APIView):
     def get_object(self, pk):
         return get_object_or_404(Articles, pk=pk)
+
+    def get(self, request, pk):
+
+        user = authenticate(username=request.data['username'], password=request.data['password'])
+        if user is not None:
+            access_token = AccessToken.for_user(user)
+            return Response({'access_token': str(access_token)}, status=200)
+        else:
+            return Response({'error': 'Invalid credentials'}, status=400)
 
     def put(self, request, pk):
         article = self.get_object(pk=pk)
