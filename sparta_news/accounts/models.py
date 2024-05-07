@@ -27,6 +27,7 @@ class Accounts(AbstractUser):
     created = models.DateTimeField(auto_now_add=True)
     last_login = models.DateTimeField(default=datetime.strptime("1970-01-01 00:00:00",
                                                                 DATETIME_FORMAT), blank=True)
+    
 
     class Meta:
         db_table: str = "Accounts"
