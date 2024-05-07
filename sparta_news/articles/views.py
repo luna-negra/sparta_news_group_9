@@ -13,7 +13,7 @@ class ArticlesDetailAPIView(APIView):
     def get_object(self, pk):
         return get_object_or_404(Articles, pk=pk)
 
-    def get(self, request, pk):
+    def get(self, request):
 
         user = authenticate(username=request.data['username'], password=request.data['password'])
         if user is not None:

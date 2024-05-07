@@ -3,6 +3,6 @@ from . import views
 
 app_name: str = "articles"
 urlpatterns: list = [
-    path("update/", views.ArticlesDetailAPIView.as_view(), name="update"),
-    path("delete/", views.ArticlesDetailAPIView.as_view(), name="delete"),
+    path("<int:pk>/update/", views.ArticlesDetailAPIView.as_view(), name="update"),
+    path("<int:pk>/delete/", views.ArticlesDetailAPIView.as_view(), name="delete"),
 ]
