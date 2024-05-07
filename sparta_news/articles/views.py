@@ -34,12 +34,13 @@ class CommentListCreatView(generics.ListAPIView):
         if len(content) < 10:
             return Response({"error":"댓글의 내용을 10글자 이상 작성해주세요"})
         
-        comment = Comments.objects.create(content=content, user=user, article=article)
+        comment = Comments.objects.create(content=content,user=user,article=article)
         serializer = CommentSerializer(comment)
         return Response(serializer.data,status=status.HTTP_201_CREATED)
     
 
 class CommentDetailView(generics.ListAPIView):
+    # permission_classes = [IsAuthenticated]
     serializer_class = CommentSerializer
 
     def put(self,request,comment_id):
