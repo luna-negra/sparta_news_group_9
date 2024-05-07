@@ -50,8 +50,8 @@ class CommentDetailView(generics.ListAPIView):
         if not content:
             return Response({"error":"댓글 내용 입력이 없습니다"})
         
-        if len(content) < 10:
-            return Response({"error":"댓글의 내용을 10글자 이상 작성해주세요"})
+        if len(content) < 5:
+            return Response({"error":"댓글의 내용을 5글자 이상 작성해주세요"})
         
         #if request.user == comment.user:
         if user == comment.user:
