@@ -15,20 +15,18 @@ from rest_framework_simplejwt.tokens import AccessToken
 
 class CommentListCreatView(generics.ListAPIView):
 
-
-    # permission_classes = [IsAuthenticatedOrReadOnly]
+    permission_classes = [IsAuthenticatedOrReadOnly]
     serializer_class = CommentSerializer
 
-    def get(self,request,article_id):
-        comments = Comments.objects.filter(article_id=article_id)
+    def get(self,request,article_pk):
+        comments = Comments.objects.filter(article_pk=article_pk)
         serializer = CommentSerializer(comments,many=True)
         return Response(serializer.data)
 
 
-    def post(self,request,article_id):
-        # user = request.user
-        user = get_object_or_404(Accounts, pk=1)
-        article = get_object_or_404(Articles, pk=article_id)
+    def post(self,request,article_pk):
+        user = request.user
+        article = get_object_or_404(Articles, pk=article_pk)
 
         content = request.data.get("content")
 
@@ -56,19 +54,16 @@ class CommentDetailView(generics.ListAPIView):
     """
        
     
-    # permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated]
     serializer_class = CommentSerializer
 
     def put(self,request,comment_id):
-        user = get_object_or_404(Accounts, pk=1)
         comment = get_object_or_404(Comments,pk=comment_id)
         content = request.data.get("content")
         if not content:
             return Response({"error":"댓글 내용 입력이 없습니다"})
 
-        
-        #if request.user == comment.user:
-        if user == comment.user:
+        if request.user == comment.user:
             comment.content = content
             comment.save()
             serializer = CommentSerializer(comment)
@@ -77,10 +72,9 @@ class CommentDetailView(generics.ListAPIView):
 
 
     def delete(self,request,comment_id):
-        user = get_object_or_404(Accounts, pk=1)
         comment = get_object_or_404(Comments, pk=comment_id)
-        #if request.user == comment.user:
-        if user == comment.user:
+        
+        if request.user == comment.user:
             comment.delete()
             return Response({"message":"댓글이 삭제 되었습니다."},status=status.HTTP_204_NO_CONTENT)
         return Response({"error":"권한 없는 사용자입니다."},status=status.HTTP_403_FORBIDDEN)
