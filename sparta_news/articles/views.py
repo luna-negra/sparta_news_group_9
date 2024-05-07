@@ -92,16 +92,12 @@ class CommentDetailView(generics.ListAPIView):
 
 class ArticleListView(APIView):
 
-    """
-    확인 필요 사항
-
-    게시글 조회 -> 등록 후 다시 게시글 조회 할 때, 일반 사용자가 아무 문제 없이 게시글을 볼 수 있는지
-    확인을 한 번 해봐야 할 듯 합니다.
-
-    self.permission_classes = [IsAuthenticated]로 인해서
-    클래스 상단에 선언한 permission_classes값이 [IsAuthenticatedOrReadOnly]가 
-    [IsAuthenticated]로 변경되기 때문입니다. :)
-    """
+    '''
+    permission_classes = [IsAuthenticatedOrReadOnly] - get으로는 읽기 기능만 가능
+    
+    post에 있던 기능 중복되는 코드 지웠습니다.
+    self.permission_classes = [IsAuthenticated]
+    '''
 
     permission_classes = [IsAuthenticatedOrReadOnly]
 
@@ -113,13 +109,12 @@ class ArticleListView(APIView):
 
     # 게시글 등록
     def post(self, request):
-        self.permission_classes = [IsAuthenticated]
         serializer = ArticlesSerializer(data=request.data)
         if serializer.is_valid(raise_exception=True):
             serializer.save(user=request.user)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
-          
-          
+
+
 class ArticlesDetailAPIView(APIView):
 
     """
@@ -133,15 +128,15 @@ class ArticlesDetailAPIView(APIView):
     """
 
 
-    def get_object(self, pk):
+    def get_object(self, article_pk):
         try:
-            return Articles.objects.get(pk=pk)
+            return Articles.objects.get(pk=article_pk)
         except Articles.DoesNotExist:
             return Response({"error": "Article not found"}, status=status.HTTP_404_NOT_FOUND)
 
     # 게시글 조회(detail)
-    def get(self, request, pk):
-        get_obj = self.get_object(pk)
+    def get(self, request, article_pk):
+        get_obj = self.get_object(article_pk)
         serializer = ArticlesSerializer(get_obj)
         return Response(serializer.data)
       
