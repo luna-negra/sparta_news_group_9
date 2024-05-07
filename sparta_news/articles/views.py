@@ -13,7 +13,7 @@ from rest_framework_simplejwt.tokens import AccessToken
 # from rest_framework.request.ForcedAuthentication import authenticate
 
 
-class CommentListCreatView(generics.ListAPIView):
+class CommentListCreatAPIView(generics.ListAPIView):
 
     permission_classes = [IsAuthenticatedOrReadOnly]
     serializer_class = CommentSerializer
@@ -40,7 +40,7 @@ class CommentListCreatView(generics.ListAPIView):
         return Response(serializer.data,status=status.HTTP_201_CREATED)
     
 
-class CommentDetailView(generics.ListAPIView):
+class CommentDetailAPIView(generics.ListAPIView):
     
     """
     HTTP 프로토콜 수정 제안 사항
@@ -58,8 +58,8 @@ class CommentDetailView(generics.ListAPIView):
     permission_classes = [IsAuthenticated]
     serializer_class = CommentSerializer
 
-    def put(self,request,comment_id):
-        comment = get_object_or_404(Comments,pk=comment_id)
+    def put(self,request,comment_pk):
+        comment = get_object_or_404(Comments,pk=comment_pk)
         content = request.data.get("content")
         if not content:
             return Response({"error":"댓글 내용 입력이 없습니다"})
@@ -72,8 +72,8 @@ class CommentDetailView(generics.ListAPIView):
         return Response({"error":"권한 없는 사용자입니다."},status=status.HTTP_403_FORBIDDEN)
 
 
-    def delete(self,request,comment_id):
-        comment = get_object_or_404(Comments, pk=comment_id)
+    def delete(self,request,comment_pk):
+        comment = get_object_or_404(Comments, pk=comment_pk)
         
         if request.user == comment.user:
             comment.delete()

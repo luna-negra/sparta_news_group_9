@@ -14,8 +14,8 @@ urlpatterns: list = [
     path("<int:pk>/", views.ArticlesDetailAPIView.as_view(), name="detail"),
     path("<int:pk>/update/", views.ArticlesDetailAPIView.as_view(), name="update"),
     path("<int:pk>/delete/", views.ArticlesDetailAPIView.as_view(), name="delete"),
-    path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
-    path("<int:article_pk>/comments/",views.CommentListCreatView.as_view()),
+    path("<int:article_pk>/comments/",views.CommentListCreatAPIView.as_view()),
+    path("comments/<int:comment_pk>/", views.CommentDetailAPIView.as_view()),
 
 ]
 
