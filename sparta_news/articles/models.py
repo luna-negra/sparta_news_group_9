@@ -5,8 +5,8 @@ from accounts.models import Accounts
 
 class Articles(models.Model):
     user = models.ForeignKey(to=Accounts,
-                             related_name="articles",
-                             on_delete=models.CASCADE)
+                            related_name="articles",
+                            on_delete=models.CASCADE)
     title = models.CharField(max_length=100)
     content = models.TextField()
     url = models.URLField()
@@ -19,8 +19,8 @@ class Articles(models.Model):
 
 class Comments(models.Model):
     user = models.ForeignKey(to=Accounts,
-                             related_name="comments",
-                             on_delete=models.CASCADE)
+                            related_name="comments",
+                            on_delete=models.CASCADE)
     article = models.ForeignKey(to=Articles,
                                 related_name="comments",
                                 on_delete=models.CASCADE)

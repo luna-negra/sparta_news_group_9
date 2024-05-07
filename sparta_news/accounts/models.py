@@ -7,9 +7,9 @@ from django.contrib.auth.models import AbstractUser
 class Accounts(AbstractUser):
 
     email = models.EmailField(unique=True,
-                              blank=False,
-                              null=False
-                              )
+                            blank=False,
+                            null=False
+                            )
     introduction = models.TextField(blank=True)
     r_token = models.CharField(max_length=300, default="")
     created = models.DateTimeField(auto_now_add=True)
