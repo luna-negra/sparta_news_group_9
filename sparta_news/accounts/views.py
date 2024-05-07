@@ -4,9 +4,10 @@ from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework.exceptions import AuthenticationFailed
 from rest_framework_simplejwt.views import TokenObtainPairView
-from rest_framework_simplejwt.serializers import TokenBlacklistSerializer
+from rest_framework_simplejwt.serializers import TokenBlacklistSerializer, TokenVerifySerializer
 from rest_framework_simplejwt.exceptions import TokenError
 from .serializers import *
+
 
 # Create your views here.
 
@@ -42,6 +43,7 @@ def signup(request):
         # 반환값 내용 및 status_code 수정
         result.pop("msg")
         result["user"] = data
+        result["result"] = True
         status_code = HTTP_200_OK
 
     else:
@@ -122,10 +124,12 @@ def signout(request):
         serializer = TokenBlacklistSerializer(data=request.data)
 
         try:
-            # 유효한 토큰 정보인 경우,
+            # refresh 토큰 유효 여부 확인
             serializer.is_valid()
+
             result["result"] = True
             result.pop("msg")
+            status_code=HTTP_204_NO_CONTENT
 
         except TokenError:
             # 사용자가 이미 유효하지 않은 token을 가지고 있는 경우(로그아웃 또는 lifetime 만료)
@@ -134,7 +138,6 @@ def signout(request):
 
     return Response(data=result,
                     status=status_code)
-
 
 class AccountDetailView(APIView):
 
@@ -150,10 +153,12 @@ class AccountDetailView(APIView):
         # 로그인 사용자 토큰 확인을 위한 매서드
         # IsAuthenticated 클래스 사용 대신 매서드 구현
         # -> Token 관련 ValidationError 발생 시, API 결과 내에 result 키 생성 불가로 인해 매서드 구현
-        # 로그인 사용자 토큰이 request에 포함된 경우 True를, 아닌 경우 False를 반환.
-        if request.auth is None:
-            return False
+        # 사용자 access_token 입력 여부 및 refresh_token 유효 여부에 따라 True/False 반환
 
+        r_token_verify = TokenVerifySerializer(data={"token": request.user.r_token})
+        if request.auth is None or not r_token_verify.is_valid():
+            return False
+        
         return True
 
     def get(self, request, account_id: int):
