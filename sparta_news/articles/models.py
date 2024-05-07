@@ -18,12 +18,10 @@ class Articles(models.Model):
 
 
 class Comments(models.Model):
-    user = models.ForeignKey(to=Accounts,
-                            related_name="comments",
-                            on_delete=models.CASCADE)
-    article = models.ForeignKey(to=Articles,
-                                related_name="comments",
-                                on_delete=models.CASCADE)
+
+    user = models.ForeignKey(to=Accounts,related_name="comments",on_delete=models.CASCADE)
+    article = models.ForeignKey(to=Articles,related_name="comments",on_delete=models.CASCADE)
+
     content = models.CharField(max_length=500)
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
