@@ -19,7 +19,8 @@ class CommentListCreatView(generics.ListAPIView):
     serializer_class = CommentSerializer
 
     def get(self,request,article_pk):
-        comments = Comments.objects.filter(article_pk=article_pk)
+        article = get_object_or_404(Articles,id=article_pk)
+        comments = article.comments.all()
         serializer = CommentSerializer(comments,many=True)
         return Response(serializer.data)
 
