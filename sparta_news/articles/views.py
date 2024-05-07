@@ -139,7 +139,7 @@ class ArticlesDetailAPIView(APIView):
         get_obj = self.get_object(article_pk)
         serializer = ArticlesSerializer(get_obj)
         return Response(serializer.data)
-      
+
 #    def get(self, request):
 #        user = authenticate(username=request.data['username'], password=request.data['password'])
 #        if user is not None:

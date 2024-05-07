@@ -37,5 +37,5 @@ DetailView를 사용하고 있기 때문에 URL 뒤에 상세 주소는 작성�
 (2) Comments URL Path '/' 누락 추가 요청
 
   :)
- 
+
 """
