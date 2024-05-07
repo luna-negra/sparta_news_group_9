@@ -1,4 +1,5 @@
-from rest_framework.request.ForcedAuthentication import authenticate
+# from rest_framework.request.ForcedAuthentication import authenticate
+
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticatedOrReadOnly, IsAuthenticated
 from rest_framework.response import Response
@@ -16,13 +17,13 @@ class ArticleListView(APIView):
     # 게시글 조회 (list)
     def get(self, request):
         article = Articles.objects.all()
-        serializer = ArticleSerializer(article, many=True)
+        serializer = ArticlesSerializer(article, many=True)
         return Response(serializer.data)
 
     # 게시글 등록
     def post(self, request):
         self.permission_classes = [IsAuthenticated]
-        serializer = ArticleSerializer(data=request.data)
+        serializer = ArticlesSerializer(data=request.data)
         if serializer.is_valid(raise_exception=True):
             serializer.save(user=request.user)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
@@ -38,7 +39,7 @@ class ArticlesDetailAPIView(APIView):
               # 게시글 조회(detail)
     def get(self, request, pk):
         get_obj = self.get_object(pk)
-        serializer = ArticleSerializer(get_obj)
+        serializer = ArticlesSerializer(get_obj)
         return Response(serializer.data)
       
 #    def get(self, request):
