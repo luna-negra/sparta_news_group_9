@@ -61,11 +61,12 @@ class CommentDetailAPIView(generics.ListAPIView):
     def put(self,request,comment_pk):
         comment = get_object_or_404(Comments,pk=comment_pk)
         content = request.data.get("content")
+        #사용자가 수정한 comment내용을 받음 -> comment밖에 항목 없음
         if not content:
             return Response({"error":"댓글 내용 입력이 없습니다"})
 
         if request.user == comment.user:
-            comment.content = content
+            comment.content = content   #수정내용 업데이트
             comment.save()
             serializer = CommentSerializer(comment)
             return Response(serializer.data)
