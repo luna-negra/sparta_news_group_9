@@ -76,8 +76,6 @@ class ArticleListView(APIView):
     def get(self, request):
         current_time = timezone.now()
 
-        #comments_count는 related_name사용
-        #나머지는 Articles의 field사용
         articles = Articles.objects.annotate(
             comments_count = Count('comments'),
             like_count = Count('like_user'),
@@ -88,9 +86,6 @@ class ArticleListView(APIView):
             days_point=ExpressionWrapper(F('days_passed') / timedelta(days=1) * -5, output_field=IntegerField()),
             total_point=F('comments_point') + F('like_point') + F('days_point')
         ).order_by('-total_point')
-
-        test = ExpressionWrapper(current_time - F('created'),output_field=IntegerField())
-        print(f'>>>>>>>>>>>>{test}')
         
         serializer = ArticlesSerializer(articles, many=True)
         return Response(serializer.data)
