@@ -139,6 +139,7 @@ def signout(request):
     return Response(data=result,
                     status=status_code)
 
+
 class AccountDetailView(APIView):
 
     """
