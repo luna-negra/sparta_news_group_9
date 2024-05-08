@@ -90,13 +90,21 @@ class ArticlesDetailAPIView(APIView):
     # 게시글 조회(detail)
     def get(self, request, article_pk):
         get_obj = self.get_object(article_pk)
-        serializer = ArticlesSerializer(get_obj)
-        return Response(serializer.data)
+
+        if isinstance(get_obj, ArticlesSerializer.Meta.model):
+            serializer = ArticlesSerializer(get_obj)
+            return Response(serializer.data)
+
+        else:
+            return get_obj
 
     def put(self, request, article_pk):
         article = self.get_object(pk=article_pk)
 
-        if not request.user == article.author:
+        if not isinstance(article, ArticlesSerializer.Meta.model):
+            return article
+
+        if not request.user == article.user:
             return Response({"error": "권한 없는 사용자입니다."}, status=status.HTTP_403_FORBIDDEN)
 
         serializer = ArticlesSerializer(article, data=request.data, partial=True)
@@ -110,7 +118,7 @@ class ArticlesDetailAPIView(APIView):
 
     def delete(self, request, article_pk):
         article = self.get_object(pk=article_pk)
-        if not request.user == article.author:
+        if not request.user == article.user:
             return Response({"error": "권한 없는 사용자입니다."}, status=status.HTTP_403_FORBIDDEN)
 
         article.delete()
