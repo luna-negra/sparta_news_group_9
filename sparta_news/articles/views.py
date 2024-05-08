@@ -136,7 +136,7 @@ class ArticlesSearchAPIView(generics.ListAPIView):
         query_params = self.request.query_params
         title = query_params.get("title")
         content = query_params.get("content")
-        user_id = query_params.get("user_id")
+        username = query_params.get("username")
 
         q = Q()
 
@@ -144,8 +144,8 @@ class ArticlesSearchAPIView(generics.ListAPIView):
             q &= Q(title__icontains=title)
         if content:
             q &= Q(content__icontains=content)
-        if user_id:
-            user = Accounts.objects.filter(id=user_id).first()
+        if username:
+            user = Accounts.objects.filter(username=username).first()
             if user:
                 q &= Q(user=user)
 
