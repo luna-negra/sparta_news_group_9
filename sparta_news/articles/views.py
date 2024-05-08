@@ -1,4 +1,3 @@
-
 from django.shortcuts import render, get_object_or_404
 from rest_framework import generics
 from rest_framework.response import Response
@@ -12,70 +11,51 @@ from rest_framework_simplejwt.tokens import AccessToken
 
 # from rest_framework.request.ForcedAuthentication import authenticate
 
-
 class CommentListCreatAPIView(generics.ListAPIView):
-
+  
     permission_classes = [IsAuthenticatedOrReadOnly]
     serializer_class = CommentSerializer
-
+    
     def get(self,request,article_pk):
-        article = get_object_or_404(Articles,id=article_pk)
+        article = get_object_or_404(Articles,pk=article_pk) #id나 pk나
         comments = article.comments.all()
         serializer = CommentSerializer(comments,many=True)
         return Response(serializer.data)
-
-
+      
     def post(self,request,article_pk):
         user = request.user
         article = get_object_or_404(Articles, pk=article_pk)
-
         content = request.data.get("content")
-
         if not content:
             return Response({"error":"댓글 내용 입력이 없습니다"})
-
-        
         comment = Comments.objects.create(content=content,user=user,article=article)
         serializer = CommentSerializer(comment)
         return Response(serializer.data,status=status.HTTP_201_CREATED)
-    
-
+      
+      
 class CommentDetailAPIView(generics.ListAPIView):
-    
-    """
-    HTTP 프로토콜 수정 제안 사항
-    
-    1. 보통 새 데이터의 추가는 POST()를 사용하고 - 블로그 글을 포스팅한다 -,
-    기존에 존재하는 데이터의 수정은 PUT()을 사용합니다. 
-    
-    PUT()이 댓글 수정인지 확실하지가 않은데, 만약 새 댓글을 작성하는 것이라면
-    API 사용 기준을 따르려면 PUT이 아닌 POST를 사용하는 것이 좋을 듯 합니다. :)
-    
-    2. user 조회하는 코드의 pk 값도 request.user의 id값을 참조하도록 수정부탁드립니다. :)
-    """
-       
-    
+  
     permission_classes = [IsAuthenticated]
     serializer_class = CommentSerializer
-
+    
     def put(self,request,comment_pk):
         comment = get_object_or_404(Comments,pk=comment_pk)
         content = request.data.get("content")
+        
         #사용자가 수정한 comment내용을 받음 -> comment밖에 항목 없음
         if not content:
             return Response({"error":"댓글 내용 입력이 없습니다"})
-
+          
         if request.user == comment.user:
             comment.content = content   #수정내용 업데이트
             comment.save()
             serializer = CommentSerializer(comment)
             return Response(serializer.data)
+          
         return Response({"error":"권한 없는 사용자입니다."},status=status.HTTP_403_FORBIDDEN)
-
-
+      
     def delete(self,request,comment_pk):
         comment = get_object_or_404(Comments, pk=comment_pk)
-        
         if request.user == comment.user:
             comment.delete()
             return Response({"message":"댓글이 삭제 되었습니다."},status=status.HTTP_204_NO_CONTENT)
@@ -83,7 +63,6 @@ class CommentDetailAPIView(generics.ListAPIView):
 
 
 class ArticleListView(APIView):
-
     """
     확인 필요 사항
 
@@ -91,7 +70,7 @@ class ArticleListView(APIView):
     확인을 한 번 해봐야 할 듯 합니다.
 
     self.permission_classes = [IsAuthenticated]로 인해서
-    클래스 상단에 선언한 permission_classes값이 [IsAuthenticatedOrReadOnly]가 
+    클래스 상단에 선언한 permission_classes값이 [IsAuthenticatedOrReadOnly]가
     [IsAuthenticated]로 변경되기 때문입니다. :)
     """
 
@@ -110,10 +89,9 @@ class ArticleListView(APIView):
         if serializer.is_valid(raise_exception=True):
             serializer.save(user=request.user)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
-          
-          
-class ArticlesDetailAPIView(APIView):
 
+
+class ArticlesDetailAPIView(APIView):
     """
     반드시 수정이 필요한 부분에 대한 요청
 
@@ -123,7 +101,6 @@ class ArticlesDetailAPIView(APIView):
 
     2. 계정 테스트로 넣어두신 주석처리된 get()은 삭제하셔도 됩니다 :)
     """
-
 
     def get_object(self, pk):
         try:
@@ -136,24 +113,27 @@ class ArticlesDetailAPIView(APIView):
         get_obj = self.get_object(pk)
         serializer = ArticlesSerializer(get_obj)
         return Response(serializer.data)
-      
-#    def get(self, request):
-#        user = authenticate(username=request.data['username'], password=request.data['password'])
-#        if user is not None:
-#            access_token = AccessToken.for_user(user)
-#            return Response({'access_token': str(access_token)}, status=200)
-#        else:
-#            return Response({'error': 'Invalid credentials'}, status=400)
 
-    def put(self, request, pk):
-        article = self.get_object(pk=pk)
+    def put(self, request, article_pk):
+        article = self.get_object(pk=article_pk)
+
+        if not request.user == article.author:
+            return Response({"error": "권한 없는 사용자입니다."}, status=status.HTTP_403_FORBIDDEN)
+
         serializer = ArticlesSerializer(article, data=request.data, partial=True)
-        if serializer.is_valid(raise_exception=True):
-            serializer.save()
-            return Response(serializer.data, status=200)
 
-    def delete(self, request, pk):
-        article = self.get_object(pk=pk)
+        if serializer.is_valid(raise_exception=True):
+            serializer.save()  # 유효한 경우 저장
+            return Response(serializer.data, status=200)
+        else:
+            # 유효하지 않은 경우 에러 응답
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def delete(self, request, article_pk):
+        article = self.get_object(pk=article_pk)
+        if not request.user == article.author:
+            return Response({"error": "권한 없는 사용자입니다."}, status=status.HTTP_403_FORBIDDEN)
+
         article.delete()
-        data = {"pk": f"{pk} is deleted."}
+        data = {"pk": f"{article_pk} is deleted."}
         return Response(data, status=200)
