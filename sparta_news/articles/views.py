@@ -1,4 +1,5 @@
 from django.shortcuts import render, get_object_or_404
+from django.db.models import Q
 from rest_framework import generics
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -124,3 +125,28 @@ class ArticlesDetailAPIView(APIView):
         article.delete()
         data = {"pk": f"{article_pk} is deleted."}
         return Response(data, status=200)
+
+
+class ArticlesSearchAPIView(generics.ListAPIView):
+
+    serializer_class = ArticlesSerializer
+
+    def get_queryset(self):
+
+        query_params = self.request.query_params
+        title = query_params.get("title")
+        content = query_params.get("content")
+        user_id = query_params.get("user_id")
+
+        q = Q()
+
+        if title:
+            q &= Q(title__icontains=title)
+        if content:
+            q &= Q(content__icontains=content)
+        if user_id:
+            user = Accounts.objects.filter(id=user_id).first()
+            if user:
+                q &= Q(user=user)
+
+        return Articles.objects.filter(q)

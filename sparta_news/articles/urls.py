@@ -6,6 +6,7 @@ app_name: str = "articles"
 urlpatterns: list = [
 
     path("", views.ArticleListView.as_view(), name="articles"),
+    path("search/", views.ArticlesSearchAPIView.as_view(), name="search"),
     path("<int:article_pk>/", views.ArticlesDetailAPIView.as_view(), name="detail"),
     path("<int:article_pk>/", views.ArticlesDetailAPIView.as_view(), name="update"),
     path("<int:article_pk>/", views.ArticlesDetailAPIView.as_view(), name="delete"),
