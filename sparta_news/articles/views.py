@@ -79,7 +79,7 @@ class ArticleListView(APIView):
         articles = Articles.objects.annotate(
             comments_count = Count('comments'),
             like_count = Count('like_user'),
-            days_passed = F('created') - current_time   
+            days_passed = F('created') - current_time
         ).annotate(
             comments_point = F('comments_count') * 3,
             like_point = F('like_count') * 1,
@@ -87,6 +87,7 @@ class ArticleListView(APIView):
             total_point=F('comments_point') + F('like_point') + F('days_point')
         ).order_by('-total_point')
 
+        test = ExpressionWrapper(F('days_passed') / timedelta(days=1) * -5, output_field=IntegerField())
         serializer = ArticlesSerializer(articles, many=True)
 
         return Response(serializer.data)
@@ -172,6 +173,7 @@ class ArticlesSearchAPIView(generics.ListAPIView):
             user = Accounts.objects.filter(username=username).first()
             if user:
                 q &= Q(user=user)
+
 
         return Articles.objects.filter(q)
       
