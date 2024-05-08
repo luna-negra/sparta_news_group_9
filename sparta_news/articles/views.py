@@ -79,17 +79,15 @@ class ArticleListView(APIView):
         articles = Articles.objects.annotate(
             comments_count = Count('comments'),
             like_count = Count('like_user'),
-            days_passed = F('created') - current_time
+            days_passed=ExpressionWrapper(current_time - F('created'),output_field=IntegerField())
         ).annotate(
             comments_point = F('comments_count') * 3,
             like_point = F('like_count') * 1,
             days_point=ExpressionWrapper(F('days_passed') / timedelta(days=1) * -5, output_field=IntegerField()),
             total_point=F('comments_point') + F('like_point') + F('days_point')
         ).order_by('-total_point')
-
-        test = ExpressionWrapper(F('days_passed') / timedelta(days=1) * -5, output_field=IntegerField())
+        
         serializer = ArticlesSerializer(articles, many=True)
-
         return Response(serializer.data)
     
     # def get(self, request):
