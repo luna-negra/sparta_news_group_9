@@ -1,5 +1,6 @@
 from django.shortcuts import render, get_object_or_404
-from django.db.models import Q
+from django.db.models import Q, F, Count, ExpressionWrapper, DurationField, IntegerField
+from django.utils import timezone
 from rest_framework import generics
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -8,6 +9,7 @@ from rest_framework.permissions import AllowAny, IsAuthenticated, IsAuthenticate
 from .models import Comments, Articles, Accounts
 from .serializers import CommentSerializer, ArticlesSerializer
 from rest_framework_simplejwt.tokens import AccessToken
+from datetime import timedelta
 
 
 # from rest_framework.request.ForcedAuthentication import authenticate
@@ -68,9 +70,27 @@ class ArticleListView(APIView):
 
     # 게시글 조회 (list)
     def get(self, request):
-        article = Articles.objects.all()
-        serializer = ArticlesSerializer(article, many=True)
+        current_time = timezone.now()
+
+        articles = Articles.objects.annotate(
+            comments_count = Count('comments'),
+            like_count = Count('like_user'),
+            days_passed = F('created') - current_time   
+        ).annotate(
+            comments_point = F('comments_count') * 3,
+            like_point = F('like_count') * 1,
+            days_point=ExpressionWrapper(F('days_passed') / timedelta(days=1) * -5, output_field=IntegerField()),
+            total_point=F('comments_point') + F('like_point') + F('days_point')
+        ).order_by('-total_point')
+
+        serializer = ArticlesSerializer(articles, many=True)
+
         return Response(serializer.data)
+    
+    # def get(self, request):
+    #     article = Articles.objects.all()
+    #     serializer = ArticlesSerializer(article, many=True)
+    #     return Response(serializer.data)
 
     # 게시글 등록
     def post(self, request):
@@ -128,7 +148,7 @@ class ArticlesDetailAPIView(APIView):
 
 
 class ArticlesSearchAPIView(generics.ListAPIView):
-
+    #게시글 검색 (title, content, username)
     serializer_class = ArticlesSerializer
 
     def get_queryset(self):
