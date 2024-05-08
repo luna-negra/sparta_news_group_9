@@ -13,37 +13,34 @@ from rest_framework_simplejwt.tokens import AccessToken
 # from rest_framework.request.ForcedAuthentication import authenticate
 
 
-class CommentListCreatView(generics.ListAPIView):
+class CommentListCreatAPIView(generics.ListAPIView):
 
-
-    # permission_classes = [IsAuthenticatedOrReadOnly]
+    permission_classes = [IsAuthenticatedOrReadOnly]
     serializer_class = CommentSerializer
 
-    def get(self,request,article_id):
-        comments = Comments.objects.filter(article_id=article_id)
+    def get(self,request,article_pk):
+        article = get_object_or_404(Articles,id=article_pk)
+        comments = article.comments.all()
         serializer = CommentSerializer(comments,many=True)
         return Response(serializer.data)
 
 
-    def post(self,request,article_id):
-        # user = request.user
-        user = get_object_or_404(Accounts, pk=1)
-        article = get_object_or_404(Articles, pk=article_id)
+    def post(self,request,article_pk):
+        user = request.user
+        article = get_object_or_404(Articles, pk=article_pk)
 
         content = request.data.get("content")
 
         if not content:
             return Response({"error":"댓글 내용 입력이 없습니다"})
-        
-        if len(content) < 10:
-            return Response({"error":"댓글의 내용을 10글자 이상 작성해주세요"})
+
         
         comment = Comments.objects.create(content=content,user=user,article=article)
         serializer = CommentSerializer(comment)
         return Response(serializer.data,status=status.HTTP_201_CREATED)
     
 
-class CommentDetailView(generics.ListAPIView):
+class CommentDetailAPIView(generics.ListAPIView):
     
     """
     HTTP 프로토콜 수정 제안 사항
@@ -58,33 +55,28 @@ class CommentDetailView(generics.ListAPIView):
     """
        
     
-    # permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated]
     serializer_class = CommentSerializer
 
-    def put(self,request,comment_id):
-        user = get_object_or_404(Accounts, pk=1)
-        comment = get_object_or_404(Comments,pk=comment_id)
+    def put(self,request,comment_pk):
+        comment = get_object_or_404(Comments,pk=comment_pk)
         content = request.data.get("content")
+        #사용자가 수정한 comment내용을 받음 -> comment밖에 항목 없음
         if not content:
             return Response({"error":"댓글 내용 입력이 없습니다"})
-        
-        if len(content) < 5:
-            return Response({"error":"댓글의 내용을 5글자 이상 작성해주세요"})
-        
-        #if request.user == comment.user:
-        if user == comment.user:
-            comment.content = content
+
+        if request.user == comment.user:
+            comment.content = content   #수정내용 업데이트
             comment.save()
             serializer = CommentSerializer(comment)
             return Response(serializer.data)
         return Response({"error":"권한 없는 사용자입니다."},status=status.HTTP_403_FORBIDDEN)
 
 
-    def delete(self,request,comment_id):
-        user = get_object_or_404(Accounts, pk=1)
-        comment = get_object_or_404(Comments, pk=comment_id)
-        #if request.user == comment.user:
-        if user == comment.user:
+    def delete(self,request,comment_pk):
+        comment = get_object_or_404(Comments, pk=comment_pk)
+        
+        if request.user == comment.user:
             comment.delete()
             return Response({"message":"댓글이 삭제 되었습니다."},status=status.HTTP_204_NO_CONTENT)
         return Response({"error":"권한 없는 사용자입니다."},status=status.HTTP_403_FORBIDDEN)
