@@ -110,6 +110,7 @@ class AccountSerializer(ModelSerializer):
         """
         
         result = self.data.copy()
+        result["like_articles"] = [article.id for article in self.instance.like_article.all()]
         result.pop("password")
         return result
 
