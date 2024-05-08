@@ -72,6 +72,8 @@ class ArticleListView(APIView):
     def get(self, request):
         current_time = timezone.now()
 
+        #comments_count는 related_name사용
+        #나머지는 Articles의 field사용
         articles = Articles.objects.annotate(
             comments_count = Count('comments'),
             like_count = Count('like_user'),
