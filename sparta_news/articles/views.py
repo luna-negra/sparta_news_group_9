@@ -3,6 +3,7 @@ from rest_framework import generics
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework import status
+from rest_framework_simplejwt.serializers import TokenVerifySerializer
 from rest_framework.permissions import AllowAny, IsAuthenticated, IsAuthenticatedOrReadOnly
 from .models import Comments, Articles, Accounts
 from .serializers import CommentSerializer, ArticlesSerializer
@@ -136,8 +137,9 @@ def scrap_article(request, article_pk: int):
         "msg": "사용자 정보가 유효하지 않습니다."
     }
     status_code = status.HTTP_401_UNAUTHORIZED
+    r_token_verify = TokenVerifySerializer(data={"token": request.user.r_token})
 
-    if request.auth is not None:
+    if request.auth is not None and r_token_verify.is_valid():
         try:
             article = Articles.objects.get(id=article_pk)
             like_user = article.like_user.all()
@@ -168,7 +170,8 @@ def unscrap_article(request, article_pk: int):
     }
     status_code = status.HTTP_401_UNAUTHORIZED
 
-    if request.auth is not None:
+    r_token_verify = TokenVerifySerializer(data={"token": request.user.r_token})
+    if request.auth is not None and r_token_verify.is_valid():
         try:
             article = Articles.objects.get(id=article_pk)
             like_user = article.like_user.all()
