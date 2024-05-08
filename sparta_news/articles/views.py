@@ -147,7 +147,7 @@ def scrap_article(request, article_pk: int):
 
         else:
             if request.user not in like_user:
-                article.like_user.add(request.user)
+                request.user.like_article.add(article)
                 result["result"] = True
                 result.pop("msg")
                 status_code = status.HTTP_204_NO_CONTENT
@@ -178,7 +178,7 @@ def unscrap_article(request, article_pk: int):
 
         else:
             if request.user in like_user:
-                article.like_user.remove(request.user)
+                request.user.like_article.remove(article)
                 result["result"] = True
                 result.pop("msg")
                 status_code = status.HTTP_204_NO_CONTENT
