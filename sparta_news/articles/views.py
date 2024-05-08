@@ -1,25 +1,20 @@
-from django.shortcuts import render, get_object_or_404
-from django.db.models import Q, F, Count, ExpressionWrapper, DurationField, IntegerField
+from smtplib import SMTPException
+from datetime import timedelta
+from django.core.mail import send_mail
+from django.conf import settings
+from django.db.models import Q, F, Count, ExpressionWrapper, IntegerField
+from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from rest_framework import generics
+from rest_framework.decorators import api_view
 from rest_framework.response import Response
+from rest_framework.permissions import (IsAuthenticated, IsAuthenticatedOrReadOnly)
 from rest_framework.views import APIView
 from rest_framework import status
 from rest_framework_simplejwt.serializers import TokenVerifySerializer
-from rest_framework.permissions import AllowAny, IsAuthenticated, IsAuthenticatedOrReadOnly
 from .models import Comments, Articles, Accounts
 from .serializers import CommentSerializer, ArticlesSerializer
-from rest_framework_simplejwt.tokens import AccessToken
-from datetime import timedelta
 
-# 임현경 Import 추가
-from rest_framework.decorators import api_view
-
-
-## 임현경 Import 추가 완료##
-
-
-# from rest_framework.request.ForcedAuthentication import authenticate
 
 class CommentListCreateAPIView(generics.ListAPIView):
     permission_classes = [IsAuthenticatedOrReadOnly]
@@ -77,23 +72,18 @@ class ArticleListView(APIView):
         current_time = timezone.now()
 
         articles = Articles.objects.annotate(
-            comments_count = Count('comments'),
-            like_count = Count('like_user'),
-            days_passed=ExpressionWrapper(current_time - F('created'),output_field=IntegerField())
+            comments_count=Count('comments'),
+            like_count=Count('like_user'),
+            days_passed=ExpressionWrapper(current_time - F('created'), output_field=IntegerField())
         ).annotate(
-            comments_point = F('comments_count') * 3,
-            like_point = F('like_count') * 1,
+            comments_point=F('comments_count') * 3,
+            like_point=F('like_count') * 1,
             days_point=ExpressionWrapper(F('days_passed') / timedelta(days=1) * -5, output_field=IntegerField()),
             total_point=F('comments_point') + F('like_point') + F('days_point')
         ).order_by('-total_point')
-        
+
         serializer = ArticlesSerializer(articles, many=True)
         return Response(serializer.data)
-    
-    # def get(self, request):
-    #     article = Articles.objects.all()
-    #     serializer = ArticlesSerializer(article, many=True)
-    #     return Response(serializer.data)
 
     # 게시글 등록
     def post(self, request):
@@ -172,10 +162,9 @@ class ArticlesSearchAPIView(generics.ListAPIView):
             if user:
                 q &= Q(user=user)
 
-
         return Articles.objects.filter(q)
-      
-      
+
+
 @api_view(["POST"])
 def scrap_article(request, article_pk: int):
     result = {
@@ -234,6 +223,68 @@ def unscrap_article(request, article_pk: int):
 
             else:
                 result["msg"] = "이미 관심 기사에서 해제되었습니다."
+
+    return Response(data=result,
+                    status=status_code)
+
+
+@api_view(["POST"])
+def email_article(request, article_pk):
+    result = {
+        "result": False,
+        "msg": "사용자 정보가 유효하지 않습니다."
+    }
+    status_code = status.HTTP_401_UNAUTHORIZED
+    r_token_verify = TokenVerifySerializer(data={"token": request.user.r_token})
+
+    if request.auth is not None and r_token_verify.is_valid():
+        try:
+            article = Articles.objects.get(id=article_pk)
+
+        except Articles.DoesNotExist:
+            result["msg"] = f"article id '{article_pk}'번이 존재하지 않습니다."
+
+        else:
+            subject = f"[Sparta News] {article.title}"
+            from_email = settings.EMAIL_HOST
+            recipient_list = [request.user.email]
+            message = \
+                f"""
+안녕하세요. '{request.user.username}' 님.
+메일 전송 요청하신 기사를 아래와 같이 전달드립니다.
+--
+
+제목: {article.title}
+작성자: {article.user.username}
+등록일: {article.created}
+--------------------------------------------------
+{article.content}
+--------------------------------------------------
+
+스파르타 마켓.
+
+"""
+
+            try:
+                sending_result = send_mail(subject=subject,
+                                           message=message,
+                                           from_email=from_email,
+                                           recipient_list=recipient_list,
+                                           fail_silently=False)
+
+            except SMTPException:
+                result["msg"] = "App Password 인증 실패"
+                status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
+
+            else:
+                if sending_result:
+                    result["result"] = True,
+                    result.pop("msg")
+                    status_code = status.HTTP_204_NO_CONTENT
+
+                else:
+                    result["msg"] = "App Password 인증 실패"
+                    status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
 
     return Response(data=result,
                     status=status_code)
