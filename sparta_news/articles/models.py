@@ -12,6 +12,10 @@ class Articles(models.Model):
     url = models.URLField()
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
+    like_user = models.ManyToManyField(to=Accounts,
+                                       related_name="like_article",
+                                       symmetrical=True,
+                                       blank=True)
 
     class Meta:
         db_table: str = "Articles"
