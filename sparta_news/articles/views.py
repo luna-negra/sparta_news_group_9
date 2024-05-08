@@ -8,61 +8,64 @@ from .models import Comments, Articles, Accounts
 from .serializers import CommentSerializer, ArticlesSerializer
 from rest_framework_simplejwt.tokens import AccessToken
 
+# 임현경 Import 추가
+from rest_framework.decorators import api_view
+
+
+## 임현경 Import 추가 완료##
+
 
 # from rest_framework.request.ForcedAuthentication import authenticate
 
 class CommentListCreateAPIView(generics.ListAPIView):
-  
     permission_classes = [IsAuthenticatedOrReadOnly]
     serializer_class = CommentSerializer
-    
+
     def get(self, request, article_pk):
-        article = get_object_or_404(Articles,pk=article_pk)
+        article = get_object_or_404(Articles, pk=article_pk)
         comments = article.comments.all()
-        serializer = CommentSerializer(comments,many=True)
+        serializer = CommentSerializer(comments, many=True)
         return Response(serializer.data)
-      
-    def post(self,request,article_pk):
+
+    def post(self, request, article_pk):
         user = request.user
         article = get_object_or_404(Articles, pk=article_pk)
         content = request.data.get("content")
         if not content:
-            return Response({"error":"댓글 내용 입력이 없습니다"})
-        comment = Comments.objects.create(content=content,user=user,article=article)
+            return Response({"error": "댓글 내용 입력이 없습니다"})
+        comment = Comments.objects.create(content=content, user=user, article=article)
         serializer = CommentSerializer(comment)
-        return Response(serializer.data,status=status.HTTP_201_CREATED)
-      
-      
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+
 class CommentDetailAPIView(generics.ListAPIView):
-  
     permission_classes = [IsAuthenticated]
     serializer_class = CommentSerializer
-    
-    def put(self,request,comment_pk):
-        comment = get_object_or_404(Comments,pk=comment_pk)
+
+    def put(self, request, comment_pk):
+        comment = get_object_or_404(Comments, pk=comment_pk)
         content = request.data.get("content")
 
         if not content:
-            return Response({"error":"댓글 내용 입력이 없습니다"})
-          
+            return Response({"error": "댓글 내용 입력이 없습니다"})
+
         if request.user == comment.user:
             comment.content = content
             comment.save()
             serializer = CommentSerializer(comment)
             return Response(serializer.data)
-          
-        return Response({"error":"권한 없는 사용자입니다."},status=status.HTTP_403_FORBIDDEN)
-      
-    def delete(self,request,comment_pk):
+
+        return Response({"error": "권한 없는 사용자입니다."}, status=status.HTTP_403_FORBIDDEN)
+
+    def delete(self, request, comment_pk):
         comment = get_object_or_404(Comments, pk=comment_pk)
         if request.user == comment.user:
             comment.delete()
-            return Response({"message":"댓글이 삭제 되었습니다."},status=status.HTTP_204_NO_CONTENT)
-        return Response({"error":"권한 없는 사용자입니다."},status=status.HTTP_403_FORBIDDEN)
+            return Response({"message": "댓글이 삭제 되었습니다."}, status=status.HTTP_204_NO_CONTENT)
+        return Response({"error": "권한 없는 사용자입니다."}, status=status.HTTP_403_FORBIDDEN)
 
 
 class ArticleListView(APIView):
-
     permission_classes = [IsAuthenticatedOrReadOnly]
 
     # 게시글 조회 (list)
@@ -124,3 +127,64 @@ class ArticlesDetailAPIView(APIView):
         article.delete()
         data = {"pk": f"{article_pk} is deleted."}
         return Response(data, status=200)
+
+
+@api_view(["POST"])
+def scrap_article(request, article_pk: int):
+    result = {
+        "result": False,
+        "msg": "사용자 정보가 유효하지 않습니다."
+    }
+    status_code = status.HTTP_401_UNAUTHORIZED
+
+    if request.auth is not None:
+        try:
+            article = Articles.objects.get(id=article_pk)
+            like_user = article.like_user.all()
+
+        except Articles.DoesNotExist:
+            result["msg"] = f"article id '{article_pk}'번이 존재하지 않습니다."
+
+        else:
+            if request.user not in like_user:
+                article.like_user.add(request.user)
+                result["result"] = True
+                result.pop("msg")
+                status_code = status.HTTP_204_NO_CONTENT
+
+            else:
+                result["msg"] = "이미 관심 기사로 등록되었습니다."
+                status_code = status.HTTP_400_BAD_REQUEST
+
+    return Response(data=result,
+                    status=status_code)
+
+
+@api_view(["POST"])
+def unscrap_article(request, article_pk: int):
+    result = {
+        "result": False,
+        "msg": "사용자 정보가 유효하지 않습니다."
+    }
+    status_code = status.HTTP_401_UNAUTHORIZED
+
+    if request.auth is not None:
+        try:
+            article = Articles.objects.get(id=article_pk)
+            like_user = article.like_user.all()
+
+        except Articles.DoesNotExist:
+            result["msg"] = f"article id '{article_pk}'번이 존재하지 않습니다."
+
+        else:
+            if request.user in like_user:
+                article.like_user.remove(request.user)
+                result["result"] = True
+                result.pop("msg")
+                status_code = status.HTTP_204_NO_CONTENT
+
+            else:
+                result["msg"] = "이미 관심 기사에서 해제되었습니다."
+
+    return Response(data=result,
+                    status=status_code)
