@@ -1,13 +1,12 @@
+from django.contrib.auth.models import AbstractUser
 from django.db import models
 from django.utils.dateformat import datetime
-from django.contrib.auth.models import AbstractUser
 
 # Create your models here.
 
 
 # CONSTANT VARIABLES
 DATETIME_FORMAT = "%Y-%m-%d %H:%M:%S"
-
 
 
 class Accounts(AbstractUser):
@@ -27,7 +26,6 @@ class Accounts(AbstractUser):
     created = models.DateTimeField(auto_now_add=True)
     last_login = models.DateTimeField(default=datetime.strptime("1970-01-01 00:00:00",
                                                                 DATETIME_FORMAT), blank=True)
-    
 
     class Meta:
         db_table: str = "Accounts"
