@@ -38,7 +38,7 @@
    - 로그인 사용자에 한해 로그아웃 및 회원정보 수정 및 회원탈퇴 가능
 
 
-### 2. Product_Post CRUD
+### 2. News_Articles CRUD
   - 게시글 작성자가 아니더라도 목록조회 가능 
   - 로그인 사용자는 게시글 생성, 목록조회, 게시글 수정 및 삭제 가능
   - 로그인 사용자의 게시글에 한해서만 수정 및 삭제가 가능
@@ -72,11 +72,11 @@
   - Only logged-in users can perform actions such as logout, modifying user information, and deleting accounts.
 
 
-### 2. Product_Post CRUD:
+### 2. News_Articles CRUD:
   - Even non-logged-in users can browse the list of posts.
   - Logged-in users can create posts, browse the list of posts, and edit or delete their own posts.
   - Only the author of a post can edit or delete it.
-  - Posts can be sorted in descending order of interest levels of logged-in users.
+  - Sort the articles by the internally calculated point, derived from the creation date, the number of likes, and the number of comments, in descending order
   - Posts cannot be created if the title, content, or URL fields are left empty.
 
 
