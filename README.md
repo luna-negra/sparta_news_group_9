@@ -1,15 +1,15 @@
-# Project: Sparta News
+# 📰 Project: Sparta News
 스파르타 AI-6기 9조 : DRF를 활용하여, 레퍼런스용 게시글을 만들 수 있는 API 뉴스 사이트를 구현
 
 <br>
 
-## Project Introduction
+## 🆕 Project Introduction
 사용자가 원하는 내용으로 기사의 제목과 내용을 기입하고 사이트 이용자에게 공유할 수 있는 뉴스형 레퍼런스 사이트
 
 <br>
 
-## Development time
-- 2024.05.10(금) 13:00 ~ 2023.05.10(금) 13:00
+## ⏲️ Development time
+- 2024.05.03(금) 13:00 ~ 2023.05.10(금) 13:00
 
 
 <br>
@@ -18,13 +18,13 @@
 - **Programming Language** : Python 3.9, 3.10
 - **Web Framework** : DJANGO DRF
 - **Database** : SQLite (for development and testing)
-- **IDE** : Pycharm
+- **IDE** : Pycharm, Vscode
 - **Version Control** : Git, GitHub
+- **Communication Tool** : Slack, Zep
   
 <br>
 
-## Project Result
-## API
+## Project Result_ API
 - https://www.notion.so/teamsparta/API-4ad9d38718154630b8a8791f81087527
   
 <br>
@@ -42,7 +42,7 @@
   - 게시글 작성자가 아니더라도 목록조회 가능 
   - 로그인 사용자는 게시글 생성, 목록조회, 게시글 수정 및 삭제 가능
   - 로그인 사용자의 게시글에 한해서만 수정 및 삭제가 가능
-  - 로그인 사용자의 관심도가 높은 순으로 정렬 가능
+  - 게시글 생성일자, 좋아요 개수, 댓글 개수를 통해 내부적으로 연산한 point가 높은 순으로 게시글을 정렬하여 조회화면에 출력
   - title, content, url 공백일 시 게시글 작성 불가
 
 
@@ -51,7 +51,7 @@
    - 로그인 사용자에 한해 댓글 생성 가능
    - 게시물이 작성되어 있어야 댓글 생성 가능
    - 게시글 작성자에 한해 댓글에 대한 수정,삭제가 가능
-   - title, content에 포함된 단어를 keyword로 게시글 검색 가능
+   - title, content에 포함된 단어와 username을 keyword로 게시글 검색 가능
    - 로그인 사용자에 한해 특정 게시글을, 사용자 계정에 등록된 이메일로 전송 가능
      
      
