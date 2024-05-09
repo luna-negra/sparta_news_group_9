@@ -97,5 +97,7 @@
      
 
 ## 📄 ERD:
-<img width="585" alt="스크린샷 2024-05-09 오전 11 59 52" src="https://github.com/luna-negra/sparta_news_group_9/assets/161671057/d5d6e7b4-98fb-47f0-b7fb-0197378b607a">
+<img width="565" alt="스크린샷 2024-05-09 오후 12 26 44" src="https://github.com/luna-negra/sparta_news_group_9/assets/161671057/acae2f01-10ea-448d-b032-da99f750c418">
+
+
 
