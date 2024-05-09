@@ -155,8 +155,11 @@ class AccountDetailView(APIView):
         # IsAuthenticated 클래스 사용 대신 매서드 구현
         # -> Token 관련 ValidationError 발생 시, API 결과 내에 result 키 생성 불가로 인해 매서드 구현
         # 사용자 access_token 입력 여부 및 refresh_token 유효 여부에 따라 True/False 반환
+        try:
+            r_token_verify = TokenVerifySerializer(data={"token": request.user.r_token})
+        except AttributeError:
+            return False
 
-        r_token_verify = TokenVerifySerializer(data={"token": request.user.r_token})
         if request.auth is None or not r_token_verify.is_valid():
             return False
         
