@@ -46,7 +46,7 @@ class CommentDetailAPIView(generics.ListAPIView):
         content = request.data.get("content")
 
         if not content:
-            return Response({"error": "댓글 내용 입력이 없습니다"})
+            return Response({"error": "댓글 내용 입력이 없습니다"}, status=status.HTTP_400_BAD_REQUEST)
 
         if request.user == comment.user:
             comment.content = content
