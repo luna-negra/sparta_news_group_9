@@ -132,6 +132,10 @@ class ArticlesDetailAPIView(APIView):
 
     def delete(self, request, article_pk):
         article = self.get_object(pk=article_pk)
+
+        if not isinstance(article, ArticlesSerializer.Meta.model):
+            return article
+
         if not request.user == article.user:
             return Response({"error": "권한 없는 사용자입니다."}, status=status.HTTP_403_FORBIDDEN)
 
@@ -172,26 +176,32 @@ def scrap_article(request, article_pk: int):
         "msg": "사용자 정보가 유효하지 않습니다."
     }
     status_code = status.HTTP_401_UNAUTHORIZED
-    r_token_verify = TokenVerifySerializer(data={"token": request.user.r_token})
 
-    if request.auth is not None and r_token_verify.is_valid():
-        try:
-            article = Articles.objects.get(id=article_pk)
-            like_user = article.like_user.all()
+    try:
+        r_token_verify = TokenVerifySerializer(data={"token": request.user.r_token})
 
-        except Articles.DoesNotExist:
-            result["msg"] = f"article id '{article_pk}'번이 존재하지 않습니다."
+    except AttributeError:
+        pass
 
-        else:
-            if request.user not in like_user:
-                request.user.like_article.add(article)
-                result["result"] = True
-                result.pop("msg")
-                status_code = status.HTTP_204_NO_CONTENT
+    else:
+        if request.auth is not None and r_token_verify.is_valid():
+            try:
+                article = Articles.objects.get(id=article_pk)
+                like_user = article.like_user.all()
+
+            except Articles.DoesNotExist:
+                result["msg"] = f"article id '{article_pk}'번이 존재하지 않습니다."
 
             else:
-                result["msg"] = "이미 관심 기사로 등록되었습니다."
-                status_code = status.HTTP_400_BAD_REQUEST
+                if request.user not in like_user:
+                    request.user.like_article.add(article)
+                    result["result"] = True
+                    result.pop("msg")
+                    status_code = status.HTTP_204_NO_CONTENT
+
+                else:
+                    result["msg"] = "이미 관심 기사로 등록되었습니다."
+                    status_code = status.HTTP_400_BAD_REQUEST
 
     return Response(data=result,
                     status=status_code)
@@ -205,24 +215,31 @@ def unscrap_article(request, article_pk: int):
     }
     status_code = status.HTTP_401_UNAUTHORIZED
 
-    r_token_verify = TokenVerifySerializer(data={"token": request.user.r_token})
-    if request.auth is not None and r_token_verify.is_valid():
-        try:
-            article = Articles.objects.get(id=article_pk)
-            like_user = article.like_user.all()
+    try:
+        r_token_verify = TokenVerifySerializer(data={"token": request.user.r_token})
 
-        except Articles.DoesNotExist:
-            result["msg"] = f"article id '{article_pk}'번이 존재하지 않습니다."
+    except AttributeError:
+        pass
 
-        else:
-            if request.user in like_user:
-                request.user.like_article.remove(article)
-                result["result"] = True
-                result.pop("msg")
-                status_code = status.HTTP_204_NO_CONTENT
+    else:
+
+        if request.auth is not None and r_token_verify.is_valid():
+            try:
+                article = Articles.objects.get(id=article_pk)
+                like_user = article.like_user.all()
+
+            except Articles.DoesNotExist:
+                result["msg"] = f"article id '{article_pk}'번이 존재하지 않습니다."
 
             else:
-                result["msg"] = "이미 관심 기사에서 해제되었습니다."
+                if request.user in like_user:
+                    request.user.like_article.remove(article)
+                    result["result"] = True
+                    result.pop("msg")
+                    status_code = status.HTTP_204_NO_CONTENT
+
+                else:
+                    result["msg"] = "이미 관심 기사에서 해제되었습니다."
 
     return Response(data=result,
                     status=status_code)
@@ -235,56 +252,63 @@ def email_article(request, article_pk):
         "msg": "사용자 정보가 유효하지 않습니다."
     }
     status_code = status.HTTP_401_UNAUTHORIZED
-    r_token_verify = TokenVerifySerializer(data={"token": request.user.r_token})
 
-    if request.auth is not None and r_token_verify.is_valid():
-        try:
-            article = Articles.objects.get(id=article_pk)
+    try:
+        r_token_verify = TokenVerifySerializer(data={"token": request.user.r_token})
 
-        except Articles.DoesNotExist:
-            result["msg"] = f"article id '{article_pk}'번이 존재하지 않습니다."
+    except AttributeError:
+        pass
 
-        else:
-            subject = f"[Sparta News] {article.title}"
-            from_email = settings.EMAIL_HOST
-            recipient_list = [request.user.email]
-            message = \
-                f"""
-안녕하세요. '{request.user.username}' 님.
-메일 전송 요청하신 기사를 아래와 같이 전달드립니다.
---
+    else:
 
-제목: {article.title}
-작성자: {article.user.username}
-등록일: {article.created}
---------------------------------------------------
-{article.content}
---------------------------------------------------
-
-스파르타 마켓.
-
-"""
-
+        if request.auth is not None and r_token_verify.is_valid():
             try:
-                sending_result = send_mail(subject=subject,
-                                           message=message,
-                                           from_email=from_email,
-                                           recipient_list=recipient_list,
-                                           fail_silently=False)
+                article = Articles.objects.get(id=article_pk)
 
-            except SMTPException:
-                result["msg"] = "App Password 인증 실패"
-                status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
+            except Articles.DoesNotExist:
+                result["msg"] = f"article id '{article_pk}'번이 존재하지 않습니다."
 
             else:
-                if sending_result:
-                    result["result"] = True,
-                    result.pop("msg")
-                    status_code = status.HTTP_204_NO_CONTENT
+                subject = f"[Sparta News] {article.title}"
+                from_email = settings.EMAIL_HOST
+                recipient_list = [request.user.email]
+                message = \
+                    f"""
+    안녕하세요. '{request.user.username}' 님.
+    메일 전송 요청하신 기사를 아래와 같이 전달드립니다.
+    --
+    
+    제목: {article.title}
+    작성자: {article.user.username}
+    등록일: {article.created}
+    --------------------------------------------------
+    {article.content}
+    --------------------------------------------------
+    
+    스파르타 마켓.
+    
+    """
 
-                else:
+                try:
+                    sending_result = send_mail(subject=subject,
+                                               message=message,
+                                               from_email=from_email,
+                                               recipient_list=recipient_list,
+                                               fail_silently=False)
+
+                except SMTPException:
                     result["msg"] = "App Password 인증 실패"
                     status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
+
+                else:
+                    if sending_result:
+                        result["result"] = True,
+                        result.pop("msg")
+                        status_code = status.HTTP_204_NO_CONTENT
+
+                    else:
+                        result["msg"] = "App Password 인증 실패"
+                        status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
 
     return Response(data=result,
                     status=status_code)
