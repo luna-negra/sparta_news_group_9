@@ -46,7 +46,7 @@ python manage.py makemigrations
 python manage.py migrate
 ```
 
-4Django 서버 실행
+4. Django 서버 실행
 ```commandline
 python manage.py runserver
 ```
