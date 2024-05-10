@@ -22,6 +22,49 @@
 - **Version Control** : Git, GitHub
 - **Communication Tool** : Slack, Zep
   
+
+<br>
+
+## 🔨 How to Use
+
+1. github repository 다운로드
+-  아래의 명령어로 repository 다운로드
+```commandline
+git clone "https://github.com/luna-negra/sparta_news_group_9"
+```
+
+2. Python 패키지 설치
+-  프로젝트 폴더 내에서 아래의 명령어로 프로젝트 실행에 필요한 패키지 설치
+```commandline
+pip install -r requirements.txt
+```
+
+3. Django Secret Key 생성
+-  Django manage.py 경로에서 아래의 명령어를 실행하여 새 SECRET_KEY 생성
+-  명령어 실행으로 console terminal에 새 SECRET_KEY가 출력
+```commandline
+python manage.py shell -c 'from django.core.management import utils; print(utils.get_random_secret_key())'
+```
+
+4. Django Project 파일 내 .env_template 파일명 변경
+-  sparta_news_group_9 > sparta_news > sparta_news > .evn_template 파일명을 .env로 변경 
+
+5. 생성한 SECRET_KEY 값을 .env 파일에 저장
+```commandline
+SECRET_KEY=NEWLY_CREATED_SECRET_KEY
+```
+
+6. Django DB Migration 진행
+-  Django manage.py 경로에서 아래의 명령어를 실행하여 DB Migration 진행
+```commandline
+python manage.py makemigrations
+python manage.py migrate
+```
+
+7. Django 서버 실행
+```commandline
+python manage.py runserver
+```
 <br>
 
 ## 👏 Project Result_ API
